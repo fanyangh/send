@@ -1,6 +1,4 @@
 const storage = require('../storage');
-const mozlog = require('../log');
-const log = mozlog('send.download');
 const crypto = require('crypto');
 
 function validateID(route_id) {
@@ -19,30 +17,20 @@ module.exports = async function(req, res) {
     const hmac = crypto.createHmac('sha256', Buffer.from(meta.auth, 'base64'));
     hmac.update(Buffer.from(meta.challenge, 'base64'));
     const verifyHash = hmac.digest();
+    const challenge = crypto.randomBytes(16).toString('base64');
+    storage.setField(id, 'challenge', challenge);
     if (!verifyHash.equals(Buffer.from(auth, 'base64'))) {
-      const challenge = crypto.randomBytes(16).toString('base64');
-      storage.setField(id, 'challenge', challenge);
       res.set('WWW-Authenticate', `send-v1 ${challenge}`);
       return res.sendStatus(401);
     }
-    const contentLength = await storage.length(id);
-    res.writeHead(200, {
-      'Content-Disposition': 'attachment',
-      'Content-Type': 'application/octet-stream',
-      'Content-Length': contentLength,
-      'X-File-Metadata': meta.metadata
+    const size = await storage.length(id);
+    const ttl = await storage.ttl(id);
+    res.send({
+      metadata: meta.metadata,
+      size,
+      ttl,
+      challenge
     });
-    const file_stream = storage.get(id);
-
-    file_stream.on('end', async () => {
-      try {
-        await storage.forceDelete(id);
-      } catch (e) {
-        log.info('DeleteError:', id);
-      }
-    });
-
-    file_stream.pipe(res);
   } catch (e) {
     res.sendStatus(404);
   }

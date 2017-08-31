@@ -22,13 +22,11 @@ module.exports = function(state, emit) {
       <span id="file-size-msg"><em>${state.translate(
         'uploadPageSizeMessage'
       )}</em></span>
-      <form method="post" action="upload" enctype="multipart/form-data">
         <label for="file-upload" id="browse" class="${state.config
           .uploadButtonStyle}" title="${state.translate(
     'uploadPageBrowseButton1'
   )}">${state.translate('uploadPageBrowseButton1')}</label>
         <input id="file-upload" type="file" name="fileUploaded" onchange=${upload} />
-      </form>
     </div>
     ${fileList(state, emit)}
   </div>

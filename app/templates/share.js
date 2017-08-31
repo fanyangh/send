@@ -8,6 +8,26 @@ module.exports = function(state, emit) {
   if (!file) {
     return notFound(state, emit);
   }
+  const passwordInput = html`
+  <div class="selectPassword">
+    <div>
+      <input id="addPassword" type="checkbox" onchange=${togglePasswordInput}/>
+      <span>${state.translate('requirePassword')}</span>
+    </div>
+    <form class="setPassword hidden" onsubmit=${setPassword}>
+      <input id="unlock-input" autocomplete="off" placeholder="${state.translate(
+        'unlockInputPlaceholder'
+      )}"/>
+      <input type="submit" id="unlock-btn" class="btn" value="${state.translate(
+        'addPassword'
+      )}"/>
+    </form>
+  </div>`;
+  const passwordComplete = html`
+  <div class="selectPassword">
+    Password: ${file.password}
+  </div>`;
+  const passwordSection = file.password ? passwordComplete : passwordInput;
   const div = html`
   <div id="share-link" class="fadeIn">
     <div class="title">${state.translate('uploadSuccessTimingHeader')}</div>
@@ -21,6 +41,7 @@ module.exports = function(state, emit) {
           'copyUrlFormButton'
         )}" onclick=${copyLink}>${state.translate('copyUrlFormButton')}</button>
       </div>
+      ${passwordSection}
       <button id="delete-file" class="btn" title="${state.translate(
         'deleteFileButton'
       )}" onclick=${deleteFile}>${state.translate('deleteFileButton')}</button>
@@ -30,6 +51,18 @@ module.exports = function(state, emit) {
     </div>
   </div>
   `;
+
+  function togglePasswordInput() {
+    document.querySelector('.setPassword').classList.toggle('hidden');
+  }
+
+  function setPassword() {
+    const password = document.getElementById('unlock-input').value;
+    if (password.length > 0) {
+      emit('password', { password, file });
+    }
+    return false;
+  }
 
   async function sendNew(e) {
     e.preventDefault();

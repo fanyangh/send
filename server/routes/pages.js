@@ -28,16 +28,13 @@ module.exports = {
     }
 
     try {
-      const efilename = await storage.filename(id);
-      const name = decodeURIComponent(efilename);
-      const size = await storage.length(id);
-      const ttl = await storage.ttl(id);
+      const { challenge, pwd } = await storage.metadata(id);
       res.send(
         stripEvents(
           routes.toString(
             `/download/${req.params.id}`,
             Object.assign(state(req), {
-              fileInfo: { name, size, ttl }
+              fileInfo: { challenge, pwd: +pwd }
             })
           )
         )
